@@ -9,6 +9,7 @@ import OracleDB from "oracledb";
 export function createAuthMiddleware(app: Express, options: WinthorAuthOptions): (req: Request, res: Response, next: NextFunction) => Response | NextFunction | void {
 
   const routesPath = options?.routePath ?? '/auth';
+  const tokenHeaderKey = options?.tokenHeaderKey ?? 'x-access-token';
 
   const router = Router();
   app.use(routesPath, router);
@@ -17,11 +18,11 @@ export function createAuthMiddleware(app: Express, options: WinthorAuthOptions):
   const jwtMinutesToExpire = options?.jwtMinutesToExpire ?? 60;
 
   createAuthRoutes(router, options.oracleConnectionPool, jwtSecret, jwtMinutesToExpire);
-  return createMiddleware(routesPath, jwtSecret);
+  return createMiddleware(routesPath, jwtSecret, tokenHeaderKey);
 
 }
 
-function createMiddleware(routesPath: string, jwtSecret: string): (req: Request, res: Response, next: NextFunction) => Response | NextFunction | void {
+function createMiddleware(routesPath: string, jwtSecret: string, tokenHeaderKey: string): (req: Request, res: Response, next: NextFunction) => Response | NextFunction | void {
 
   const allowedRoutes = ['/login', '/refresh-token', `${routesPath}/login`, `${routesPath}/refresh-token`];
 
@@ -34,7 +35,7 @@ function createMiddleware(routesPath: string, jwtSecret: string): (req: Request,
     if (allowedRoutes.includes(req.path)) {
       next();
     } else {
-      let token = req.headers['x-access-token'] as string;
+      let token = req.headers[tokenHeaderKey] as string;
 
       if (!token) {
         token = req.query.token as string;

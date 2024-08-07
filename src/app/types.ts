@@ -4,5 +4,6 @@ export type WinthorAuthOptions = {
   oracleConnectionPool: oracledb.Pool;
   jwtSecret?: string;
   jwtMinutesToExpire?: number;
-  routePath?: string
+  routePath?: string;
+  tokenHeaderKey?: string;
 };
