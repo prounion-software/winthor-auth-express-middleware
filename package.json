@@ -1,6 +1,6 @@
 {
   "name": "winthor-auth-express-middleware",
-  "version": "0.0.1",
+  "version": "0.0.6",
   "description": "Middleware para autenticação e autorização para APIs de integração com Winthor (TOTVS)",
   "repository": "https://github.com/prounion-software/winthor-auth-express-middleware",
   "homepage": "https://github.com/prounion-software/winthor-auth-express-middleware",
@@ -10,7 +10,11 @@
   "engines": {
     "node": "^20.9.0 || >=21.1.0"
   },
-  "main": "index.js",
+  "types": "./dist/src/index.d.ts",
+  "main": "./dist/src/index.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "test": "vitest",
     "lint": "tsc --noEmit && eslint --fix --ext .js,.jsx,.ts,.tsx ./",

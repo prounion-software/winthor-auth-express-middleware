@@ -6,25 +6,22 @@ import { authRoutes } from '@app/domain/auth'
 import OracleDB from "oracledb";
 
 
-export function createAuthMiddleware(app: Express, options: WinthorAuthOptions): (req: Request, res: Response, next: NextFunction) => Response | NextFunction | void {
+export function configAuthMiddleware(router: Router, options: WinthorAuthOptions): void {
 
   const routesPath = options?.routePath ?? '/auth';
   const tokenHeaderKey = options?.tokenHeaderKey ?? 'x-access-token';
 
-  const router = Router();
-  app.use(routesPath, router);
-
   const jwtSecret = options?.jwtSecret ?? uuid();
   const jwtMinutesToExpire = options?.jwtMinutesToExpire ?? 60;
+  const unprotectedRoutes = options?.unprotectedRoutes ?? [];
 
-  createAuthRoutes(router, options.oracleConnectionPool, jwtSecret, jwtMinutesToExpire);
-  return createMiddleware(routesPath, jwtSecret, tokenHeaderKey);
-
+  router.use(createMiddleware(routesPath, jwtSecret, tokenHeaderKey, unprotectedRoutes));
+  createAuthRoutes(router, routesPath, options.oracleConnectionPool, jwtSecret, jwtMinutesToExpire);
 }
 
-function createMiddleware(routesPath: string, jwtSecret: string, tokenHeaderKey: string): (req: Request, res: Response, next: NextFunction) => Response | NextFunction | void {
+function createMiddleware(routesPath: string, jwtSecret: string, tokenHeaderKey: string, unprotectedRoutes: string[]): (req: Request, res: Response, next: NextFunction) => Response | NextFunction | void {
 
-  const allowedRoutes = ['/login', '/refresh-token', `${routesPath}/login`, `${routesPath}/refresh-token`];
+  unprotectedRoutes = ['/login', '/refresh-token', `${routesPath}/login`, `${routesPath}/refresh-token`, ...unprotectedRoutes];
 
   return (
     req: Request,
@@ -32,7 +29,7 @@ function createMiddleware(routesPath: string, jwtSecret: string, tokenHeaderKey:
     next: NextFunction,
   ): Response | NextFunction | void => {
 
-    if (allowedRoutes.includes(req.path)) {
+    if (unprotectedRoutes.includes(req.path)) {
       next();
     } else {
       let token = req.headers[tokenHeaderKey] as string;
@@ -59,7 +56,7 @@ function createMiddleware(routesPath: string, jwtSecret: string, tokenHeaderKey:
 
 }
 
-function createAuthRoutes(router: Router, oracleConnectionPool: OracleDB.Pool, jwtSecret: string, jwtMinutesToExpire: number) {
+function createAuthRoutes(router: Router, routesPath: string, oracleConnectionPool: OracleDB.Pool, jwtSecret: string, jwtMinutesToExpire: number) {
 
-  authRoutes(router, oracleConnectionPool, jwtSecret, jwtMinutesToExpire);
+  authRoutes(router, routesPath, oracleConnectionPool, jwtSecret, jwtMinutesToExpire);
 }

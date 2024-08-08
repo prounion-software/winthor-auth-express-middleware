@@ -6,4 +6,5 @@ export type WinthorAuthOptions = {
   jwtMinutesToExpire?: number;
   routePath?: string;
   tokenHeaderKey?: string;
+  unprotectedRoutes?: string[]
 };
